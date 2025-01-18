@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Carga, Creación de Imagen Reducida y Recorte</title>
+    <title>Aplicación de Carga, Creación de Imagen Reducida, Recorte y Análisis de Números</title>
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script> <!-- Agregar Tesseract.js -->
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #A5F276 ;
+            background-color: #02011C;
+            color: white;
         }
 
         /* Botón para cargar la imagen */
@@ -46,11 +48,18 @@
             margin-top: 20px;
             max-width: 100%; /* Imagen recortada */
         }
+
+        /* Contenedor para mostrar los números detectados */
+        #numbersContainer {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #FFD700;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Carga, Creación de Imagen Reducida y Recorte</h1>
+    <h1>Aplicación de Carga, Creación de Imagen Reducida, Recorte y Análisis de Números</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -68,7 +77,10 @@
         <img id="croppedImage" src="" alt="Imagen recortada" style="display:none;">
     </div>
 
-    <!-- Script para cargar, reducir y recortar la imagen -->
+    <!-- Contenedor para mostrar los números detectados -->
+    <div id="numbersContainer"></div>
+
+    <!-- Script para cargar, reducir, recortar la imagen y detectar números -->
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
     <script>
         // Selección de elementos
@@ -76,6 +88,7 @@
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const croppedImage = document.getElementById('croppedImage');
+        const numbersContainer = document.getElementById('numbersContainer');
 
         let imgElement;  // Elemento de la imagen cargada
         let cropper;     // Instancia de Cropper.js
@@ -151,6 +164,36 @@
             const croppedDataURL = canvas.toDataURL('image/png'); // Convertir el recorte a un PNG
             croppedImage.src = croppedDataURL;
             croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
+
+            // Ahora analizar la imagen recortada para detectar números
+            analyzeImageForNumbers(croppedDataURL); // Llamar a la función que usa Tesseract.js
+        }
+
+        // Función para analizar la imagen recortada y detectar números usando Tesseract.js
+        function analyzeImageForNumbers(imageData) {
+            numbersContainer.innerHTML = 'Analizando...'; // Mensaje mientras se analiza
+
+            // Usar Tesseract.js para analizar la imagen
+            Tesseract.recognize(
+                imageData,       // La imagen que se va a analizar
+                'eng',           // Idioma (en este caso inglés, para detectar números)
+                {
+                    logger: (m) => {
+                        console.log(m);  // Mostrar logs del proceso
+                    }
+                }
+            ).then(({ data: { text } }) => {
+                // Extraer los números del texto detectado
+                const numbers = text.match(/\d+/g);
+                if (numbers) {
+                    numbersContainer.innerHTML = 'Números detectados: ' + numbers.join(', ');
+                } else {
+                    numbersContainer.innerHTML = 'No se detectaron números.';
+                }
+            }).catch(err => {
+                numbersContainer.innerHTML = 'Error al analizar la imagen.';
+                console.error(err);
+            });
         }
 
         // Agregar un botón para obtener la imagen recortada
