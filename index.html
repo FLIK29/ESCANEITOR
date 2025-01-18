@@ -10,13 +10,6 @@
 
     <style>
         /* Estilos para la página */
-        #video {
-            width: 100%;
-            height: auto;
-            border: 1px solid black;
-            display: block;
-            margin-bottom: 10px;
-        }
         #result {
             font-size: 20px;
             font-weight: bold;
@@ -26,7 +19,7 @@
             font-size: 16px;
             color: red;
         }
-        #captureButton {
+        #uploadButton {
             padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
@@ -34,16 +27,22 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        #captureButton:hover {
+        #uploadButton:hover {
             background-color: #45a049;
+        }
+        #imagePreview {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid #ddd;
         }
     </style>
 </head>
 <body>
     <h1>Detector de Números en Foto</h1>
-    <video id="video" autoplay></video>
-    <canvas id="canvas" style="display: none;"></canvas>
-    <button id="captureButton">Tomar Foto</button>
+    <input type="file" id="imageInput" accept="image/*" style="display:none">
+    <button id="uploadButton">Seleccionar Foto</button>
+    <img id="imagePreview" style="display:none" alt="Vista previa de la imagen seleccionada">
     <div id="result">Detectando números...</div>
     <div id="error"></div>
 
@@ -51,49 +50,40 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.3/dist/tesseract.min.js"></script>
 
     <script>
-        const videoElement = document.getElementById('video');
-        const captureButton = document.getElementById('captureButton');
+        const uploadButton = document.getElementById('uploadButton');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
 
-        // Configurar la cámara para tomar una foto
-        function startScanning() {
-            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })
-                    .then((stream) => {
-                        videoElement.srcObject = stream;
-                        videoElement.play();
-                    })
-                    .catch((err) => {
-                        errorElement.textContent = 'No se pudo acceder a la cámara. Error: ' + err;
-                    });
-            } else {
-                errorElement.textContent = 'La API getUserMedia no está soportada en este navegador.';
+        // Cuando se haga clic en el botón, se abrirá el selector de archivos
+        uploadButton.addEventListener('click', () => {
+            imageInput.click(); // Abrir el selector de archivo
+        });
+
+        // Cuando se seleccione una imagen, se mostrará una vista previa y se analizará
+        imageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+
+                // Mostrar la vista previa de la imagen
+                reader.onload = (e) => {
+                    imagePreview.style.display = 'block';
+                    imagePreview.src = e.target.result;
+                    
+                    // Llamar a la función para procesar la imagen seleccionada
+                    processImage(e.target.result);
+                };
+
+                reader.readAsDataURL(file);
             }
-        }
-
-        // Función para capturar la imagen del video
-        function captureImage() {
-            // Ajustar el tamaño del canvas a la resolución del video
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-
-            // Dibujar el fotograma actual del video en el canvas
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-
-            // Convertir la imagen del canvas en una URL de imagen
-            const imageUrl = canvas.toDataURL('image/png');
-
-            // Llamar a la función para procesar la imagen
-            processImage(imageUrl);
-        }
+        });
 
         // Función para procesar la imagen y hacer OCR
         function processImage(imageUrl) {
             Tesseract.recognize(
-                imageUrl, // La imagen que se captura del canvas
+                imageUrl, // La imagen que se carga desde el selector de archivos
                 'eng',    // Idioma (puedes agregar otros idiomas si lo necesitas)
                 {
                     logger: (m) => console.log(m), // Progreso de OCR
@@ -106,12 +96,6 @@
                 errorElement.textContent = 'Hubo un error al procesar la imagen.';
             });
         }
-
-        // Iniciar la cámara cuando la página cargue
-        window.onload = startScanning;
-
-        // Event listener para el botón de captura
-        captureButton.addEventListener('click', captureImage);
     </script>
 </body>
 </html>
