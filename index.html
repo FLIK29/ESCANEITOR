@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Carga, Creación de Imagen Reducida, Recorte y Análisis de Números</title>
+    <title>Aplicación de Carga, Recorte y Análisis de Números</title>
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
     <style>
         body {
@@ -11,7 +11,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #FFB6B6;
+            background-color: #95C100;
             color: white;
         }
 
@@ -54,11 +54,28 @@
             font-size: 18px;
             color: #FFD700;
         }
+
+        /* Estilo de los botones */
+        .actionButton {
+            width: 250px;
+            height: 50px;
+            font-size: 20px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .actionButton:hover {
+            background-color: #0b7dda;
+        }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Carga, Creación de Imagen Reducida, Recorte y Análisis de Números</h1>
+    <h1>Aplicación de Carga, Recorte y Análisis de Números</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -79,7 +96,13 @@
     <!-- Contenedor para mostrar los números detectados -->
     <div id="numbersContainer"></div>
 
-    <!-- Script para cargar, reducir, recortar la imagen y analizar los números -->
+    <!-- Botón para recortar la imagen -->
+    <button id="cropButton" class="actionButton" style="display:none;">Recortar Imagen</button>
+
+    <!-- Botón para analizar la imagen -->
+    <button id="analyzeButton" class="actionButton" style="display:none;">Analizar Imagen</button>
+
+    <!-- Script para cargar, recortar, guardar y analizar la imagen -->
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
     <script>
         // Selección de elementos
@@ -87,10 +110,14 @@
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const croppedImage = document.getElementById('croppedImage');
+        const cropButton = document.getElementById('cropButton');
+        const analyzeButton = document.getElementById('analyzeButton');
         const numbersContainer = document.getElementById('numbersContainer');
+        const imageContainer = document.getElementById('imageContainer');
 
         let imgElement;  // Elemento de la imagen cargada
         let cropper;     // Instancia de Cropper.js
+        let croppedFile;  // Imagen recortada para enviar
 
         // Reemplaza esto con tu API Key de OCR.space
         const OCR_API_KEY = 'K85364678288957';
@@ -112,26 +139,26 @@
                     imgElement.src = e.target.result;
 
                     imgElement.onload = () => {
-                        // Reducir la imagen al 10% y crear una nueva imagen reducida
-                        const reducedImage = reduceImage(imgElement);
-
-                        // Mostrar la imagen reducida en la página
-                        imagePreview.src = reducedImage;
-                        imagePreview.style.display = 'block'; // Hacer visible la imagen
+                        // Mostrar la imagen cargada y preparar para el recorte
+                        imagePreview.src = e.target.result;
+                        imagePreview.style.display = 'block'; // Hacer visible la imagen cargada
 
                         // Crear un elemento de imagen visible y permitir el recorte
                         const reducedImgElement = new Image();
-                        reducedImgElement.src = reducedImage;
+                        reducedImgElement.src = e.target.result;
                         imageContainer.innerHTML = ''; // Limpiar contenedor anterior
                         imageContainer.appendChild(reducedImgElement);
 
-                        // Instanciar el recorte en la imagen reducida usando Cropper.js
+                        // Instanciar el recorte en la imagen cargada usando Cropper.js
                         cropper = new Cropper(reducedImgElement, {
                             aspectRatio: 1, // Relación de aspecto para el recorte (puedes ajustarlo)
                             viewMode: 1,
                             cropBoxResizable: true,
                             autoCropArea: 0.5, // Área inicial de recorte
                         });
+
+                        // Mostrar el botón de recorte
+                        cropButton.style.display = 'inline-block';
                     };
                 };
 
@@ -139,48 +166,34 @@
             }
         });
 
-        // Función para reducir la imagen y generar una nueva imagen
-        function reduceImage(image) {
-            // Crear un canvas para dibujar la imagen reducida
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-
-            // Establecer el tamaño reducido (10%)
-            const reducedWidth = image.width * 0.1;  // 10% del ancho original
-            const reducedHeight = image.height * 0.1; // 10% de la altura original
-
-            // Establecer las dimensiones del canvas
-            canvas.width = reducedWidth;
-            canvas.height = reducedHeight;
-
-            // Dibujar la imagen reducida en el canvas
-            ctx.drawImage(image, 0, 0, reducedWidth, reducedHeight);
-
-            // Convertir el canvas a una imagen y devolverla
-            return canvas.toDataURL('image/png'); // Generar la imagen reducida en formato PNG
-        }
-
         // Función para obtener la imagen recortada
-        function getCroppedImage() {
+        cropButton.addEventListener('click', () => {
             const canvas = cropper.getCroppedCanvas();
             const croppedDataURL = canvas.toDataURL('image/png'); // Convertir el recorte a un PNG
             croppedImage.src = croppedDataURL;
             croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
 
-            // Convertir la imagen recortada a un archivo Blob para el análisis
+            // Convertir la imagen recortada a un archivo Blob
             canvas.toBlob((blob) => {
-                // Ahora enviar el archivo Blob a OCR.space para detectar los números
-                analyzeImageWithOCR(blob); // Llamar a la función que utiliza OCR.space
+                croppedFile = blob;  // Guardar el archivo recortado
             }, 'image/png');
-        }
 
-        // Función para analizar la imagen usando OCR.space
-        function analyzeImageWithOCR(imageBlob) {
+            // Mostrar el botón para analizar la imagen
+            analyzeButton.style.display = 'inline-block';
+        });
+
+        // Función para analizar la imagen recortada usando OCR.space
+        analyzeButton.addEventListener('click', () => {
+            if (!croppedFile) {
+                alert("No se ha recortado una imagen.");
+                return;
+            }
+
             numbersContainer.innerHTML = 'Analizando...'; // Mensaje mientras se analiza
 
             const formData = new FormData();
             formData.append("apikey", OCR_API_KEY); // Añadir tu API Key
-            formData.append("file", imageBlob); // Enviar el archivo Blob
+            formData.append("file", croppedFile); // Enviar el archivo Blob
 
             fetch("https://api.ocr.space/parse/image", {
                 method: "POST",
@@ -205,15 +218,7 @@
                 numbersContainer.innerHTML = 'Error al analizar la imagen.';
                 console.error(error);
             });
-        }
-
-        // Agregar un botón para obtener la imagen recortada
-        const getCroppedButton = document.createElement('button');
-        getCroppedButton.textContent = 'Recortar Imagen';
-        getCroppedButton.style.marginTop = '20px';
-        document.body.appendChild(getCroppedButton);
-
-        getCroppedButton.addEventListener('click', getCroppedImage); // Llamar a la función de recorte
+        });
     </script>
 
 </body>
