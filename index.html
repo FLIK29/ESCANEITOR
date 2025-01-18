@@ -44,7 +44,7 @@
 </head>
 <body>
 
-    <h1> Reducida</h1>
+    <h1>Aplicación de Carga y Creación de Imagen Reducida</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -83,7 +83,7 @@
                     imgElement.src = e.target.result;
 
                     imgElement.onload = () => {
-                        // Reducir la imagen al 50% y crear una nueva imagen reducida
+                        // Reducir la imagen al 80% y crear una nueva imagen reducida
                         const reducedImage = reduceImage(imgElement);
 
                         // Mostrar la imagen reducida en la página
@@ -105,9 +105,9 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Establecer el tamaño reducido (50%)
-            const reducedWidth = image.width * 0.5;
-            const reducedHeight = image.height * 0.5;
+            // Establecer el tamaño reducido (80%)
+            const reducedWidth = image.width * 0.3;  // 80% del ancho original
+            const reducedHeight = image.height * 0.3; // 80% de la altura original
 
             // Establecer las dimensiones del canvas
             canvas.width = reducedWidth;
