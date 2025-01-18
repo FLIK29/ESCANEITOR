@@ -4,8 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Números en Vivo</title>
+    
+    <!-- Agregar el manifiesto para convertir la página en una PWA -->
+    <link rel="manifest" href="manifest.json">
+    
     <style>
-        /* Aseguramos que el video ocupe toda la pantalla */
+        /* Estilos para la página */
         #video {
             width: 100%;
             height: auto;
@@ -23,33 +27,32 @@
     </style>
 </head>
 <body>
-    <h1>Detector</h1>
+    <h1>Detector Tiempo Real</h1>
     <video id="video" autoplay></video>
     <div id="result">Detectando números...</div>
     <div id="error"></div>
 
+    <!-- Incluir Tesseract.js para OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.3/dist/tesseract.min.js"></script>
+    
     <script>
         const videoElement = document.getElementById('video');
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
 
-        // Función para iniciar el acceso a la cámara
+        // Función para iniciar la captura de video
         function startScanning() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                navigator.mediaDevices.getUserMedia({ video: true })  // Solicitar acceso a la cámara
+                navigator.mediaDevices.getUserMedia({ video: true })
                     .then((stream) => {
-                        // Asignar el stream de la cámara al elemento de video
                         videoElement.srcObject = stream;
                         videoElement.play();
                         processFrame();  // Comienza a procesar los cuadros de video
                     })
                     .catch((err) => {
-                        // En caso de error, mostrar mensaje
                         errorElement.textContent = 'No se pudo acceder a la cámara. Error: ' + err;
                     });
             } else {
-                // Si el navegador no soporta getUserMedia
                 errorElement.textContent = 'La API getUserMedia no está soportada en este navegador.';
             }
         }
@@ -89,6 +92,17 @@
 
         // Iniciar la captura al cargar la página
         window.onload = startScanning;
+
+        // Registrar el Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then((registration) => {
+                    console.log('Service Worker registrado con éxito:', registration);
+                })
+                .catch((error) => {
+                    console.log('Error al registrar el Service Worker:', error);
+                });
+        }
     </script>
 </body>
 </html>
