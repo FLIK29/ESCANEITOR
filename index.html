@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Carga y Creación de Imagen Reducida</title>
+    <title>Aplicación de Carga, Creación de Imagen Reducida y Recorte</title>
+    <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -40,11 +41,16 @@
             height: auto;
             margin-top: 20px;
         }
+
+        #croppedImage {
+            margin-top: 20px;
+            max-width: 100%; /* Imagen recortada */
+        }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Carga y Creación de Imagen Reducida</h1>
+    <h1>Aplicación de Carga, Creación de Imagen Reducida y Recorte</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -57,14 +63,22 @@
         <img id="imagePreview" src="" alt="Vista previa de la imagen" style="display:none;">
     </div>
 
-    <!-- Script para cargar y reducir la imagen -->
+    <!-- Contenedor para mostrar la imagen recortada -->
+    <div id="croppedContainer">
+        <img id="croppedImage" src="" alt="Imagen recortada" style="display:none;">
+    </div>
+
+    <!-- Script para cargar, reducir y recortar la imagen -->
+    <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
     <script>
         // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
+        const croppedImage = document.getElementById('croppedImage');
 
         let imgElement;  // Elemento de la imagen cargada
+        let cropper;     // Instancia de Cropper.js
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -83,15 +97,26 @@
                     imgElement.src = e.target.result;
 
                     imgElement.onload = () => {
-                        // Reducir la imagen al 80% y crear una nueva imagen reducida
+                        // Reducir la imagen al 10% y crear una nueva imagen reducida
                         const reducedImage = reduceImage(imgElement);
 
                         // Mostrar la imagen reducida en la página
                         imagePreview.src = reducedImage;
                         imagePreview.style.display = 'block'; // Hacer visible la imagen
 
-                        // Eliminar la imagen original (esto sucede implícitamente ya que solo estamos trabajando con la imagen reducida)
-                        imgElement = null; // Se "elimina" la imagen original
+                        // Crear un elemento de imagen visible y permitir el recorte
+                        const reducedImgElement = new Image();
+                        reducedImgElement.src = reducedImage;
+                        imageContainer.innerHTML = ''; // Limpiar contenedor anterior
+                        imageContainer.appendChild(reducedImgElement);
+
+                        // Instanciar el recorte en la imagen reducida usando Cropper.js
+                        cropper = new Cropper(reducedImgElement, {
+                            aspectRatio: 1, // Relación de aspecto para el recorte (puedes ajustarlo)
+                            viewMode: 1,
+                            cropBoxResizable: true,
+                            autoCropArea: 0.5, // Área inicial de recorte
+                        });
                     };
                 };
 
@@ -105,9 +130,9 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Establecer el tamaño reducido (80%)
-            const reducedWidth = image.width * 0.1;  // 80% del ancho original
-            const reducedHeight = image.height * 0.1; // 80% de la altura original
+            // Establecer el tamaño reducido (10%)
+            const reducedWidth = image.width * 0.1;  // 10% del ancho original
+            const reducedHeight = image.height * 0.1; // 10% de la altura original
 
             // Establecer las dimensiones del canvas
             canvas.width = reducedWidth;
@@ -119,6 +144,22 @@
             // Convertir el canvas a una imagen y devolverla
             return canvas.toDataURL('image/png'); // Generar la imagen reducida en formato PNG
         }
+
+        // Función para obtener la imagen recortada
+        function getCroppedImage() {
+            const canvas = cropper.getCroppedCanvas();
+            const croppedDataURL = canvas.toDataURL('image/png'); // Convertir el recorte a un PNG
+            croppedImage.src = croppedDataURL;
+            croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
+        }
+
+        // Agregar un botón para obtener la imagen recortada
+        const getCroppedButton = document.createElement('button');
+        getCroppedButton.textContent = 'Recortar Imagen';
+        getCroppedButton.style.marginTop = '20px';
+        document.body.appendChild(getCroppedButton);
+
+        getCroppedButton.addEventListener('click', getCroppedImage); // Llamar a la función de recorte
     </script>
 
 </body>
