@@ -11,7 +11,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #42E890;
+            background-color: #FFB6B6;
             color: white;
         }
 
@@ -167,17 +167,20 @@
             croppedImage.src = croppedDataURL;
             croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
 
-            // Ahora enviar la imagen a OCR.space para detectar los números
-            analyzeImageWithOCR(croppedDataURL); // Llamar a la función que utiliza OCR.space
+            // Convertir la imagen recortada a un archivo Blob para el análisis
+            canvas.toBlob((blob) => {
+                // Ahora enviar el archivo Blob a OCR.space para detectar los números
+                analyzeImageWithOCR(blob); // Llamar a la función que utiliza OCR.space
+            }, 'image/png');
         }
 
         // Función para analizar la imagen usando OCR.space
-        function analyzeImageWithOCR(imageData) {
+        function analyzeImageWithOCR(imageBlob) {
             numbersContainer.innerHTML = 'Analizando...'; // Mensaje mientras se analiza
 
             const formData = new FormData();
             formData.append("apikey", OCR_API_KEY); // Añadir tu API Key
-            formData.append("base64Image", imageData.split(',')[1]); // Sólo la parte base64 de la imagen
+            formData.append("file", imageBlob); // Enviar el archivo Blob
 
             fetch("https://api.ocr.space/parse/image", {
                 method: "POST",
