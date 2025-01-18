@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Carga de Imagen</title>
+    <title>Aplicación de Carga y Creación de Imagen Reducida</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #B1F020;
+            background-color: #f4f4f4;
         }
 
         /* Botón para cargar la imagen */
@@ -33,20 +33,35 @@
         /* Contenedor para mostrar la imagen */
         #imageContainer {
             margin-top: 20px;
-            display: flex;
-            align-items: center;
         }
 
         #imagePreview {
-            max-width: 20%; /* Reducir tamaño de la imagen al 50% */
+            max-width: 100%; /* La imagen original se mostrará al 100% */
             height: auto;
             margin-top: 20px;
+        }
+
+        /* Botón para descargar la imagen reducida */
+        #downloadButton {
+            margin-top: 20px;
+            width: 250px;
+            height: 50px;
+            font-size: 20px;
+            background-color: #FF6347;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #downloadButton:hover {
+            background-color: #FF4500;
         }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Carga de Imagen</h1>
+    <h1>Aplicación de Carga y Creación de Imagen Reducida</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -59,12 +74,18 @@
         <img id="imagePreview" src="" alt="Vista previa de la imagen" style="display:none;">
     </div>
 
-    <!-- Script para cargar y mostrar la imagen -->
+    <!-- Botón para descargar la imagen reducida -->
+    <button id="downloadButton" style="display:none;">Descargar Imagen Reducida</button>
+
+    <!-- Script para cargar, reducir y descargar la imagen -->
     <script>
         // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
+        const downloadButton = document.getElementById('downloadButton');
+
+        let imgElement;  // Elemento de la imagen cargada
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -79,13 +100,52 @@
 
                 reader.onload = (e) => {
                     // Mostrar la imagen seleccionada en la vista previa
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block'; // Hacer visible la imagen
+                    imgElement = new Image();
+                    imgElement.src = e.target.result;
+
+                    imgElement.onload = () => {
+                        // Mostrar la imagen cargada en la página
+                        imagePreview.src = imgElement.src;
+                        imagePreview.style.display = 'block'; // Hacer visible la imagen
+                        downloadButton.style.display = 'block'; // Mostrar el botón de descarga
+
+                        // Reducir la imagen al 50% y crear un archivo
+                        downloadButton.onclick = () => {
+                            createReducedImage(imgElement);
+                        };
+                    };
                 };
 
                 reader.readAsDataURL(file); // Leer la imagen seleccionada
             }
         });
+
+        // Función para reducir la imagen y permitir su descarga
+        function createReducedImage(image) {
+            // Crear un canvas para dibujar la imagen reducida
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Establecer el tamaño reducido (50%)
+            const reducedWidth = image.width * 0.5;
+            const reducedHeight = image.height * 0.5;
+
+            // Establecer las dimensiones del canvas
+            canvas.width = reducedWidth;
+            canvas.height = reducedHeight;
+
+            // Dibujar la imagen reducida en el canvas
+            ctx.drawImage(image, 0, 0, reducedWidth, reducedHeight);
+
+            // Convertir el canvas a una imagen
+            const reducedImageURL = canvas.toDataURL('image/png'); // Generar una URL de la imagen reducida
+
+            // Crear un enlace de descarga
+            const downloadLink = document.createElement('a');
+            downloadLink.href = reducedImageURL;
+            downloadLink.download = 'imagen_reducida.png'; // Nombre del archivo a descargar
+            downloadLink.click(); // Hacer clic en el enlace para descargar
+        }
     </script>
 
 </body>
