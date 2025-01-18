@@ -39,7 +39,7 @@
     </style>
 </head>
 <body>
-    <h1>Detector v232323</h1>
+    <h1>Dete</h1>
     <input type="file" id="imageInput" accept="image/*" style="display:none">
     <button id="uploadButton">Seleccionar Foto</button>
     <img id="imagePreview" style="display:none" alt="Vista previa de la imagen seleccionada">
@@ -73,9 +73,9 @@
                 reader.onload = (e) => {
                     imagePreview.style.display = 'block';
                     imagePreview.src = e.target.result;
-                    
+
                     // Llamar a la función para procesar la imagen seleccionada
-                    processImage(e.target.result);
+                    processImage(file);
                 };
 
                 reader.readAsDataURL(file);
@@ -83,14 +83,14 @@
         });
 
         // Función para procesar la imagen y hacer OCR
-        function processImage(imageUrl) {
+        function processImage(file) {
             // Mostrar mensaje de "Analizando foto"
             loadingElement.style.display = 'block';
             resultElement.textContent = ''; // Limpiar el resultado anterior
             errorElement.textContent = '';  // Limpiar el error anterior
 
             Tesseract.recognize(
-                imageUrl, // La imagen que se carga desde el selector de archivos
+                file, // Usar el archivo directamente sin convertirlo a base64
                 'eng',    // Idioma (puedes agregar otros idiomas si lo necesitas)
                 {
                     logger: (m) => console.log(m), // Progreso de OCR
@@ -118,4 +118,3 @@
     </script>
 </body>
 </html>
-
