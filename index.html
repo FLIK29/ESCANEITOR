@@ -5,21 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Números con Recorte de Imagen</title>
     <style>
+        /* Establecer el fondo verde para toda la página */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             padding: 20px;
+            background-color: #28a745; /* Fondo verde */
+            color: white; /* Texto en blanco para mejor contraste */
         }
+
         #result {
             font-size: 20px;
             font-weight: bold;
             color: green;
         }
+
         #error {
             font-size: 16px;
             color: red;
         }
-        #uploadButton {
+
+        #uploadButton, #cropButton {
             padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
@@ -27,19 +33,18 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        #uploadButton:hover {
+
+        #uploadButton:hover, #cropButton:hover {
             background-color: #45a049;
         }
+
         #imagePreview {
             margin-top: 20px;
             width: 100%;
             max-width: 400px;
             border: 1px solid #ddd;
         }
-        #loading {
-            font-size: 18px;
-            color: blue;
-        }
+
         #cropperContainer {
             margin-top: 20px;
             max-width: 400px;
@@ -47,6 +52,12 @@
             margin: 0 auto;
             border: 1px solid #ddd;
         }
+
+        #loading {
+            font-size: 18px;
+            color: blue;
+        }
+
         #imageInput {
             display: none;
         }
@@ -56,15 +67,15 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Detector de Números en Foto 2</h1>
-    <p>Selecciona una foto, recórtala para seleccionar el área de interés y luego analiza los números detectados.</p>
-
-    <input type="file" id="imageInput" accept="image/*">
-    <button id="uploadButton">Seleccionar Foto</button>
+    <h1>Detector de Números en Foto</h1>
+    <button id="uploadButton">Etiqueta</button> <!-- Botón para subir foto -->
+    <input type="file" id="imageInput" accept="image/*" />
 
     <div id="cropperContainer" style="display:none;">
         <img id="imagePreview" src="" alt="Vista previa de la imagen seleccionada">
     </div>
+
+    <button id="cropButton" style="display:none;">Recortar y Analizar Imagen</button> <!-- Botón para recortar y analizar -->
 
     <div id="loading" style="display:none;">Analizando foto...</div>
     <div id="result">Detectando números...</div>
@@ -77,6 +88,7 @@
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
         const cropperContainer = document.getElementById('cropperContainer');
+        const cropButton = document.getElementById('cropButton');
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
         const loadingElement = document.getElementById('loading');
@@ -84,7 +96,7 @@
 
         let cropper; // Variable para la instancia de Cropper.js
 
-        // Cuando se haga clic en el botón, se abrirá el selector de archivos
+        // Cuando se haga clic en el botón "Etiqueta", se abrirá el selector de archivos
         uploadButton.addEventListener('click', () => {
             imageInput.click(); // Abrir el selector de archivo
         });
@@ -99,6 +111,7 @@
                 reader.onload = (e) => {
                     imagePreview.src = e.target.result;
                     cropperContainer.style.display = 'block'; // Mostrar el contenedor de recorte
+                    cropButton.style.display = 'block'; // Mostrar el botón de recorte
 
                     // Inicializar Cropper.js
                     if (cropper) {
@@ -170,10 +183,7 @@
         }
 
         // Botón para procesar la imagen recortada
-        const cropButton = document.createElement('button');
-        cropButton.textContent = 'Recortar y Analizar Imagen';
         cropButton.addEventListener('click', processImage);
-        document.body.appendChild(cropButton);
     </script>
 </body>
 </html>
