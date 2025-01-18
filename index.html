@@ -5,14 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplicación de Carga, Creación de Imagen Reducida, Recorte y Análisis de Números</title>
     <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js"></script> <!-- Agregar Tesseract.js -->
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #02011C;
+            background-color: #F2A176;
             color: white;
         }
 
@@ -80,7 +79,7 @@
     <!-- Contenedor para mostrar los números detectados -->
     <div id="numbersContainer"></div>
 
-    <!-- Script para cargar, reducir, recortar la imagen y detectar números -->
+    <!-- Script para cargar, reducir, recortar la imagen y analizar los números -->
     <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
     <script>
         // Selección de elementos
@@ -92,6 +91,9 @@
 
         let imgElement;  // Elemento de la imagen cargada
         let cropper;     // Instancia de Cropper.js
+
+        // Reemplaza esto con tu API Key de OCR.space
+        const OCR_API_KEY = 'TU_API_KEY_AQUI';
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -165,34 +167,39 @@
             croppedImage.src = croppedDataURL;
             croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
 
-            // Ahora analizar la imagen recortada para detectar números
-            analyzeImageForNumbers(croppedDataURL); // Llamar a la función que usa Tesseract.js
+            // Ahora enviar la imagen a OCR.space para detectar los números
+            analyzeImageWithOCR(croppedDataURL); // Llamar a la función que utiliza OCR.space
         }
 
-        // Función para analizar la imagen recortada y detectar números usando Tesseract.js
-        function analyzeImageForNumbers(imageData) {
+        // Función para analizar la imagen usando OCR.space
+        function analyzeImageWithOCR(imageData) {
             numbersContainer.innerHTML = 'Analizando...'; // Mensaje mientras se analiza
 
-            // Usar Tesseract.js para analizar la imagen
-            Tesseract.recognize(
-                imageData,       // La imagen que se va a analizar
-                'eng',           // Idioma (en este caso inglés, para detectar números)
-                {
-                    logger: (m) => {
-                        console.log(m);  // Mostrar logs del proceso
+            const formData = new FormData();
+            formData.append("apikey", OCR_API_KEY); // Añadir tu API Key
+            formData.append("base64Image", imageData.split(',')[1]); // Sólo la parte base64 de la imagen
+
+            fetch("https://api.ocr.space/parse/image", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.ParsedResults && data.ParsedResults.length > 0) {
+                    const parsedText = data.ParsedResults[0].ParsedText;
+                    const numbers = parsedText.match(/\d+/g); // Extraer los números
+                    if (numbers) {
+                        numbersContainer.innerHTML = 'Números detectados: ' + numbers.join(', ');
+                    } else {
+                        numbersContainer.innerHTML = 'No se detectaron números.';
                     }
-                }
-            ).then(({ data: { text } }) => {
-                // Extraer los números del texto detectado
-                const numbers = text.match(/\d+/g);
-                if (numbers) {
-                    numbersContainer.innerHTML = 'Números detectados: ' + numbers.join(', ');
                 } else {
-                    numbersContainer.innerHTML = 'No se detectaron números.';
+                    numbersContainer.innerHTML = 'No se pudo analizar la imagen.';
                 }
-            }).catch(err => {
+            })
+            .catch(error => {
                 numbersContainer.innerHTML = 'Error al analizar la imagen.';
-                console.error(err);
+                console.error(error);
             });
         }
 
