@@ -10,7 +10,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #F2F076;
+            background-color: #02011C;
         }
 
         /* Botón para cargar la imagen */
@@ -33,6 +33,7 @@
         /* Contenedor para mostrar la imagen */
         #imageContainer {
             margin-top: 20px;
+            position: relative;
         }
 
         #imagePreview {
@@ -63,6 +64,7 @@
             border: 2px dashed #fff;
             position: absolute;
             cursor: pointer;
+            display: none;
         }
     </style>
 </head>
@@ -92,6 +94,7 @@
         const cropButton = document.getElementById('cropButton');
         let imgElement;
         let cropArea;
+        let isCropping = false;
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -125,10 +128,13 @@
                         cropArea.classList.add('crop-area');
                         cropArea.style.width = '200px';
                         cropArea.style.height = '200px';
-                        document.body.appendChild(cropArea);
+                        imagePreview.parentElement.appendChild(cropArea);
 
-                        // Permitir que el usuario seleccione un área para recortar
-                        cropArea.addEventListener('mousedown', startCrop);
+                        // Mostrar área de recorte
+                        cropArea.style.display = 'block';
+
+                        // Habilitar el modo de recorte
+                        isCropping = true;
                     };
                 };
 
@@ -152,67 +158,45 @@
             return canvas.toDataURL('image/png');
         }
 
-        // Función para recortar la imagen
-        function startCrop(e) {
-            const rect = imagePreview.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
+        // Evento para iniciar el recorte
+        cropButton.addEventListener('click', () => {
+            if (isCropping) {
+                const rect = cropArea.getBoundingClientRect();
+                const imgRect = imagePreview.getBoundingClientRect();
 
-            cropArea.style.left = `${offsetX - cropArea.offsetWidth / 2}px`;
-            cropArea.style.top = `${offsetY - cropArea.offsetHeight / 2}px`;
+                const cropX = rect.left - imgRect.left;
+                const cropY = rect.top - imgRect.top;
+                const cropWidth = cropArea.offsetWidth;
+                const cropHeight = cropArea.offsetHeight;
 
-            cropArea.addEventListener('mousemove', updateCropPosition);
-            cropArea.addEventListener('mouseup', cropImage);
-            cropArea.addEventListener('mouseleave', cropImage);
-        }
+                // Crear un canvas para recortar la imagen
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
 
-        // Actualizar la posición del área de recorte
-        function updateCropPosition(e) {
-            const rect = imagePreview.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
+                canvas.width = cropWidth;
+                canvas.height = cropHeight;
 
-            cropArea.style.left = `${offsetX - cropArea.offsetWidth / 2}px`;
-            cropArea.style.top = `${offsetY - cropArea.offsetHeight / 2}px`;
-        }
+                ctx.drawImage(imagePreview, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-        // Función para realizar el recorte
-        function cropImage() {
-            const rect = cropArea.getBoundingClientRect();
-            const imgRect = imagePreview.getBoundingClientRect();
+                // Crear una imagen recortada
+                const croppedImage = canvas.toDataURL('image/png');
 
-            const cropX = rect.left - imgRect.left;
-            const cropY = rect.top - imgRect.top;
-            const cropWidth = cropArea.offsetWidth;
-            const cropHeight = cropArea.offsetHeight;
+                // Mostrar la imagen recortada
+                imagePreview.src = croppedImage;
+                imagePreview.style.display = 'block';
 
-            // Crear un canvas para recortar la imagen
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
+                // Ocultar los demás elementos
+                document.getElementById('uploadButton').style.display = 'none';
+                cropButton.style.display = 'none';
+                cropArea.style.display = 'none';  // Ocultar el área de recorte
 
-            canvas.width = cropWidth;
-            canvas.height = cropHeight;
-
-            ctx.drawImage(imagePreview, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-            // Crear una imagen recortada
-            const croppedImage = canvas.toDataURL('image/png');
-
-            // Mostrar la imagen recortada
-            imagePreview.src = croppedImage;
-            imagePreview.style.display = 'block';
-
-            // Ocultar los demás elementos
-            document.getElementById('uploadButton').style.display = 'none';
-            document.getElementById('cropButton').style.display = 'none';
-            cropArea.style.display = 'none';  // Ocultar el área de recorte
-
-            // Restablecer el estado de la página para cargar una nueva imagen
-            cropButton.textContent = 'Cargar nueva imagen';
-            cropButton.onclick = function() {
-                location.reload();
-            };
-        }
+                // Restablecer el estado de la página para cargar una nueva imagen
+                cropButton.textContent = 'Cargar nueva imagen';
+                cropButton.onclick = function() {
+                    location.reload();
+                };
+            }
+        });
     </script>
 
 </body>
