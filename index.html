@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Números en Vivo</title>
+    <title>Detector de Números en Vivo 2  </title>
     <style>
+        /* Asegúrate de que el video ocupe toda la pantalla o el tamaño correcto */
         #video {
             width: 100%;
+            height: auto;
             border: 1px solid black;
             margin-bottom: 10px;
         }
@@ -33,40 +35,44 @@
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
 
-        // Configurar la cámara para usar la cámara trasera
+        // Función para iniciar la cámara y mostrar el video en tiempo real
         function startScanning() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                     .then((stream) => {
+                        // Asignar el stream de la cámara al video
                         videoElement.srcObject = stream;
                         videoElement.play();
+                        // Iniciar el proceso de captura de imágenes y OCR
                         processFrame();
                     })
                     .catch((err) => {
+                        // Mostrar un error si no se puede acceder a la cámara
                         errorElement.textContent = 'No se pudo acceder a la cámara. Verifica los permisos. Errores: ' + err;
                     });
             } else {
+                // Si el navegador no soporta getUserMedia
                 errorElement.textContent = 'La API getUserMedia no es soportada en este navegador.';
             }
         }
 
-        // Función para capturar una imagen del video y hacer OCR
+        // Función para capturar una imagen del video y procesarla con OCR
         function processFrame() {
             // Crear un canvas para capturar el fotograma del video
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Ajustar el tamaño del canvas al tamaño del video
-            canvas.width = videoElement.videoWidth / 2;  // Reducir resolución para mejorar el rendimiento
+            // Ajustar el tamaño del canvas al tamaño del video (o mitad para mejorar rendimiento)
+            canvas.width = videoElement.videoWidth / 2;
             canvas.height = videoElement.videoHeight / 2;
 
             // Dibujar el fotograma del video en el canvas
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-            // Usar Tesseract.js para extraer texto de la imagen
+            // Usar Tesseract.js para hacer OCR sobre la imagen capturada
             Tesseract.recognize(
-                canvas, // La imagen que se extrae del canvas
-                'eng',   // El idioma (puedes agregar otros idiomas si lo necesitas)
+                canvas, // Imagen que se extrae del canvas
+                'eng',   // Idioma (puedes agregar otros idiomas si es necesario)
                 {
                     logger: (m) => console.log(m), // Información de progreso
                 }
@@ -79,13 +85,13 @@
                 errorElement.textContent = 'Hubo un error al procesar la imagen.';
             });
 
-            // Limitar la frecuencia del OCR, por ejemplo, cada 200 ms (5 veces por segundo)
+            // Llamar a la función de nuevo después de un breve retraso
             setTimeout(() => {
                 requestAnimationFrame(processFrame);
-            }, 200);
+            }, 200); // Frecuencia de captura: 5 veces por segundo
         }
 
-        // Iniciar el proceso al cargar la página
+        // Iniciar el proceso de escaneo al cargar la página
         window.onload = startScanning;
     </script>
 </body>
