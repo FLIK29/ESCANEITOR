@@ -61,6 +61,15 @@
         #imageInput {
             display: none;
         }
+
+        /* Estilo para la imagen recortada */
+        #croppedImage {
+            margin-top: 20px;
+            width: 100%;
+            max-width: 400px;
+            display: block;
+            border: 1px solid #ddd;
+        }
     </style>
 
     <!-- Incluir Cropper.js -->
@@ -81,6 +90,9 @@
     <div id="result">Detectando números...</div>
     <div id="error"></div>
 
+    <!-- Imagen recortada para mostrar -->
+    <img id="croppedImage" src="" alt="Imagen recortada" style="display: none;" />
+
     <!-- Incluir Cropper.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
@@ -92,6 +104,7 @@
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
         const loadingElement = document.getElementById('loading');
+        const croppedImageElement = document.getElementById('croppedImage');
         const apiKey = 'K85364678288957'; // Sustituir con tu clave API
 
         let cropper; // Variable para la instancia de Cropper.js
@@ -135,6 +148,10 @@
             const canvas = cropper.getCroppedCanvas();
 
             if (canvas) {
+                // Mostrar solo la imagen recortada
+                croppedImageElement.src = canvas.toDataURL();
+                croppedImageElement.style.display = 'block'; // Mostrar la imagen recortada
+
                 // Convertir la imagen recortada a un Blob
                 canvas.toBlob((blob) => {
                     // Mostrar mensaje de "Analizando foto"
