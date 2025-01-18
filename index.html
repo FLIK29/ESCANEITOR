@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Números en Foto</title>
     <style>
-        /* Estilos para la página */
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
         #result {
             font-size: 20px;
             font-weight: bold;
@@ -39,7 +43,8 @@
     </style>
 </head>
 <body>
-    <h1>Dete</h1>
+    <h1>Detector de Números en Foto</h1>
+    <p>Selecciona una foto que contenga números para analizarlos.</p>
     <input type="file" id="imageInput" accept="image/*" style="display:none">
     <button id="uploadButton">Seleccionar Foto</button>
     <img id="imagePreview" style="display:none" alt="Vista previa de la imagen seleccionada">
@@ -47,9 +52,7 @@
     <div id="error"></div>
     <div id="loading" style="display:none">Analizando foto...</div>
 
-    <!-- Incluir Tesseract.js para OCR -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.3/dist/tesseract.min.js"></script>
-
+    <!-- Incluir la API OCR.space -->
     <script>
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
@@ -57,6 +60,7 @@
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
         const loadingElement = document.getElementById('loading');
+        const apiKey = 'K85364678288957'; // Sustituir con tu clave API
 
         // Cuando se haga clic en el botón, se abrirá el selector de archivos
         uploadButton.addEventListener('click', () => {
@@ -82,35 +86,44 @@
             }
         });
 
-        // Función para procesar la imagen y hacer OCR
+        // Función para procesar la imagen y hacer OCR usando OCR.space API
         function processImage(file) {
             // Mostrar mensaje de "Analizando foto"
             loadingElement.style.display = 'block';
             resultElement.textContent = ''; // Limpiar el resultado anterior
             errorElement.textContent = '';  // Limpiar el error anterior
 
-            Tesseract.recognize(
-                file, // Usar el archivo directamente sin convertirlo a base64
-                'eng',    // Idioma (puedes agregar otros idiomas si lo necesitas)
-                {
-                    logger: (m) => console.log(m), // Progreso de OCR
-                }
-            ).then(({ data: { text } }) => {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("apikey", apiKey);
+            formData.append("language", "eng"); // Idioma de la imagen (inglés en este caso)
+
+            // Llamar a la API de OCR.space
+            fetch("https://api.ocr.space/parse/image", {
+                method: "POST",
+                body: formData,
+            })
+            .then((response) => response.json())
+            .then((data) => {
                 // Ocultar mensaje de "Analizando foto"
                 loadingElement.style.display = 'none';
 
-                // Filtrar solo los números
-                const numbers = text.replace(/\D/g, ''); // Eliminar todo lo que no sea número
-                if (numbers) {
-                    resultElement.textContent = `Números detectados: ${numbers}`;
+                if (data.ParsedResults && data.ParsedResults.length > 0) {
+                    const text = data.ParsedResults[0].ParsedText;
+                    const numbers = text.replace(/\D/g, ''); // Filtrar solo los números
+                    if (numbers) {
+                        resultElement.textContent = `Números detectados: ${numbers}`;
+                    } else {
+                        resultElement.textContent = 'No se detectaron números.';
+                    }
                 } else {
-                    resultElement.textContent = 'No se detectaron números.';
+                    errorElement.textContent = 'No se pudo procesar la imagen.';
                 }
-            }).catch((error) => {
+            })
+            .catch((error) => {
                 // Ocultar mensaje de "Analizando foto"
                 loadingElement.style.display = 'none';
 
-                // Mostrar mensaje de error
                 console.error(error);
                 errorElement.textContent = 'Hubo un error al procesar la imagen.';
             });
