@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escáner de Códigos de Barras V2</title>
+    <style>
+        #video {
+            width: 100%;
+            border: 1px solid black;
+            margin-bottom: 10px;
+        }
+        #result {
+            font-size: 20px;
+            font-weight: bold;
+            color: green;
+        }
+        #error {
+            font-size: 16px;
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Escáner de Códigos de Barras</h1>
+    <video id="video" autoplay></video>
+    <div id="result">Escanea un código de barras</div>
+    <div id="error"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.18.6/umd/index.min.js"></script>
+    <script>
+        const videoElement = document.getElementById('video');
+        const resultElement = document.getElementById('result');
+        const errorElement = document.getElementById('error');
+
+        // Crear el lector de código de barras
+        const codeReader = new ZXing.BrowserBarcodeReader();
+
+        // Función para iniciar la cámara
+        function startScanning() {
+            // Intenta acceder a la cámara y empieza a transmitir
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                .then((stream) => {
+                    // Asignar el stream de la cámara al video
+                    videoElement.srcObject = stream;
+                    videoElement.play();
+
+                    // Inicia el escaneo de códigos de barras desde el video
+                    codeReader.decodeFromVideoDevice(null, videoElement, (result, error) => {
+                        if (result) {
+                            // Si se encuentra un código de barras, muestra el resultado
+                            resultElement.textContent = `Código escaneado: ${result.text}`;
+                            errorElement.textContent = '';  // Limpiar errores
+                        } else if (error) {
+                            // Si no se encuentra un código, muestra el mensaje de escaneo
+                            resultElement.textContent = 'Escaneando...';
+                            errorElement.textContent = '';  // Limpiar errores
+                        }
+                    });
+                })
+                .catch((err) => {
+                    // Si hay un problema accediendo a la cámara, muestra un error
+                    errorElement.textContent = 'No se pudo acceder a la cámara. Verifica los permisos.';
+                });
+        }
+
+        // Iniciar la cámara cuando se carga la página
+        window.onload = startScanning;
+    </script>
+</body>
+</html>
