@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Carga, Creación de Imagen Reducida y Recorte</title>
-    <link href="https://unpkg.com/cropperjs/dist/cropper.min.css" rel="stylesheet">
+    <title>Aplicación de Carga y Recorte de Imagen</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #02011C;
+            background-color: #F2F076;
         }
 
         /* Botón para cargar la imagen */
@@ -42,15 +41,34 @@
             margin-top: 20px;
         }
 
-        #croppedImage {
+        /* Botón para recortar la imagen */
+        #cropButton {
+            width: 250px;
+            height: 50px;
+            font-size: 20px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
             margin-top: 20px;
-            max-width: 100%; /* Imagen recortada */
+        }
+
+        #cropButton:hover {
+            background-color: #e53935;
+        }
+
+        /* Estilo para el área de recorte */
+        .crop-area {
+            border: 2px dashed #fff;
+            position: absolute;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Carga, Creación de Imagen Reducida y Recorte</h1>
+    <h1>Aplicación de Carga y Recorte de Imagen</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
@@ -63,22 +81,17 @@
         <img id="imagePreview" src="" alt="Vista previa de la imagen" style="display:none;">
     </div>
 
-    <!-- Contenedor para mostrar la imagen recortada -->
-    <div id="croppedContainer">
-        <img id="croppedImage" src="" alt="Imagen recortada" style="display:none;">
-    </div>
+    <!-- Botón para recortar la imagen -->
+    <button id="cropButton" style="display:none;">Recortar Imagen</button>
 
-    <!-- Script para cargar, reducir y recortar la imagen -->
-    <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
+    <!-- Script para cargar y reducir la imagen -->
     <script>
-        // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
         const imagePreview = document.getElementById('imagePreview');
-        const croppedImage = document.getElementById('croppedImage');
-
-        let imgElement;  // Elemento de la imagen cargada
-        let cropper;     // Instancia de Cropper.js
+        const cropButton = document.getElementById('cropButton');
+        let imgElement;
+        let cropArea;
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -104,19 +117,18 @@
                         imagePreview.src = reducedImage;
                         imagePreview.style.display = 'block'; // Hacer visible la imagen
 
-                        // Crear un elemento de imagen visible y permitir el recorte
-                        const reducedImgElement = new Image();
-                        reducedImgElement.src = reducedImage;
-                        imageContainer.innerHTML = ''; // Limpiar contenedor anterior
-                        imageContainer.appendChild(reducedImgElement);
+                        // Mostrar el botón de recorte
+                        cropButton.style.display = 'block';
 
-                        // Instanciar el recorte en la imagen reducida usando Cropper.js
-                        cropper = new Cropper(reducedImgElement, {
-                            aspectRatio: 1, // Relación de aspecto para el recorte (puedes ajustarlo)
-                            viewMode: 1,
-                            cropBoxResizable: true,
-                            autoCropArea: 0.5, // Área inicial de recorte
-                        });
+                        // Crear área de recorte
+                        cropArea = document.createElement('div');
+                        cropArea.classList.add('crop-area');
+                        cropArea.style.width = '200px';
+                        cropArea.style.height = '200px';
+                        document.body.appendChild(cropArea);
+
+                        // Permitir que el usuario seleccione un área para recortar
+                        cropArea.addEventListener('mousedown', startCrop);
                     };
                 };
 
@@ -126,40 +138,81 @@
 
         // Función para reducir la imagen y generar una nueva imagen
         function reduceImage(image) {
-            // Crear un canvas para dibujar la imagen reducida
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Establecer el tamaño reducido (10%)
-            const reducedWidth = image.width * 0.1;  // 10% del ancho original
-            const reducedHeight = image.height * 0.1; // 10% de la altura original
+            const reducedWidth = image.width * 0.1;
+            const reducedHeight = image.height * 0.1;
 
-            // Establecer las dimensiones del canvas
             canvas.width = reducedWidth;
             canvas.height = reducedHeight;
 
-            // Dibujar la imagen reducida en el canvas
             ctx.drawImage(image, 0, 0, reducedWidth, reducedHeight);
 
-            // Convertir el canvas a una imagen y devolverla
-            return canvas.toDataURL('image/png'); // Generar la imagen reducida en formato PNG
+            return canvas.toDataURL('image/png');
         }
 
-        // Función para obtener la imagen recortada
-        function getCroppedImage() {
-            const canvas = cropper.getCroppedCanvas();
-            const croppedDataURL = canvas.toDataURL('image/png'); // Convertir el recorte a un PNG
-            croppedImage.src = croppedDataURL;
-            croppedImage.style.display = 'block'; // Hacer visible la imagen recortada
+        // Función para recortar la imagen
+        function startCrop(e) {
+            const rect = imagePreview.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
+
+            cropArea.style.left = `${offsetX - cropArea.offsetWidth / 2}px`;
+            cropArea.style.top = `${offsetY - cropArea.offsetHeight / 2}px`;
+
+            cropArea.addEventListener('mousemove', updateCropPosition);
+            cropArea.addEventListener('mouseup', cropImage);
+            cropArea.addEventListener('mouseleave', cropImage);
         }
 
-        // Agregar un botón para obtener la imagen recortada
-        const getCroppedButton = document.createElement('button');
-        getCroppedButton.textContent = 'Recortar Imagen';
-        getCroppedButton.style.marginTop = '20px';
-        document.body.appendChild(getCroppedButton);
+        // Actualizar la posición del área de recorte
+        function updateCropPosition(e) {
+            const rect = imagePreview.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
 
-        getCroppedButton.addEventListener('click', getCroppedImage); // Llamar a la función de recorte
+            cropArea.style.left = `${offsetX - cropArea.offsetWidth / 2}px`;
+            cropArea.style.top = `${offsetY - cropArea.offsetHeight / 2}px`;
+        }
+
+        // Función para realizar el recorte
+        function cropImage() {
+            const rect = cropArea.getBoundingClientRect();
+            const imgRect = imagePreview.getBoundingClientRect();
+
+            const cropX = rect.left - imgRect.left;
+            const cropY = rect.top - imgRect.top;
+            const cropWidth = cropArea.offsetWidth;
+            const cropHeight = cropArea.offsetHeight;
+
+            // Crear un canvas para recortar la imagen
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = cropWidth;
+            canvas.height = cropHeight;
+
+            ctx.drawImage(imagePreview, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+            // Crear una imagen recortada
+            const croppedImage = canvas.toDataURL('image/png');
+
+            // Mostrar la imagen recortada
+            imagePreview.src = croppedImage;
+            imagePreview.style.display = 'block';
+
+            // Ocultar los demás elementos
+            document.getElementById('uploadButton').style.display = 'none';
+            document.getElementById('cropButton').style.display = 'none';
+            cropArea.style.display = 'none';  // Ocultar el área de recorte
+
+            // Restablecer el estado de la página para cargar una nueva imagen
+            cropButton.textContent = 'Cargar nueva imagen';
+            cropButton.onclick = function() {
+                location.reload();
+            };
+        }
     </script>
 
 </body>
