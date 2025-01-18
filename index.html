@@ -3,204 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Números con Recorte de Imagen</title>
+    <title>Aplicación de Recorte de Imagen</title>
     <style>
-        /* Establecer el fondo verde para toda la página */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
-            background-color: #28a745; /* Fondo verde */
-            color: white; /* Texto en blanco para mejor contraste */
+            margin: 0;
+            padding: 0;
+            background-color: #green;
         }
 
-        #result {
-            font-size: 20px;
+        /* Botón grande */
+        #uploadButton {
+            width: 500px;
+            height: 500px;
+            font-size: 24px;
             font-weight: bold;
-            color: green;
-        }
-
-        #error {
-            font-size: 16px;
-            color: red;
-        }
-
-        #uploadButton, #cropButton {
-            padding: 10px 20px;
             background-color: #4CAF50;
             color: white;
             border: none;
+            border-radius: 10px;
             cursor: pointer;
-            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        #uploadButton:hover, #cropButton:hover {
+        #uploadButton:hover {
             background-color: #45a049;
         }
 
-        #imagePreview {
+        /* Contenedor de la imagen */
+        #imageContainer {
             margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
-            border: 1px solid #ddd;
         }
 
-        #cropperContainer {
-            margin-top: 20px;
-            max-width: 400px;
-            max-height: 400px;
-            margin: 0 auto;
-            border: 1px solid #ddd;
-        }
-
-        #loading {
-            font-size: 18px;
-            color: blue;
-        }
-
+        /* Ocultar el input de archivos */
         #imageInput {
             display: none;
         }
 
-        /* Estilo para la imagen recortada */
-        #croppedImage {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 400px;
+        /* Estilo de la imagen */
+        #imagePreview {
+            max-width: 100%;
+            max-height: 400px;
+            margin: 20px auto;
             display: block;
+        }
+
+        /* Área de recorte */
+        #cropContainer {
+            display: none;
+            margin: 20px auto;
+            max-width: 80%;
+            max-height: 400px;
             border: 1px solid #ddd;
         }
     </style>
-
-    <!-- Incluir Cropper.js -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css" rel="stylesheet">
 </head>
 <body>
-    <h1>Detector de Números en Foto</h1>
-    <button id="uploadButton">Etiqueta</button> <!-- Botón para subir foto -->
-    <input type="file" id="imageInput" accept="image/*" />
 
-    <div id="cropperContainer" style="display:none;">
-        <img id="imagePreview" src="" alt="Vista previa de la imagen seleccionada">
+    <button id="uploadButton">Etiqueta</button>
+
+    <!-- Input de imagen (oculto) -->
+    <input type="file" id="imageInput" accept="image/*">
+
+    <!-- Contenedor de la imagen y recorte -->
+    <div id="cropContainer">
+        <img id="imagePreview" src="" alt="Vista previa de la imagen">
     </div>
 
-    <button id="cropButton" style="display:none;">Recortar y Analizar Imagen</button> <!-- Botón para recortar y analizar -->
-
-    <div id="loading" style="display:none;">Analizando foto...</div>
-    <div id="result">Detectando números...</div>
-    <div id="error"></div>
-
-    <!-- Imagen recortada para mostrar -->
-    <img id="croppedImage" src="" alt="Imagen recortada" style="display: none;" />
-
-    <!-- Incluir Cropper.js -->
+    <!-- Script para recorte de imagen -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
+        // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
+        const cropContainer = document.getElementById('cropContainer');
         const imagePreview = document.getElementById('imagePreview');
-        const cropperContainer = document.getElementById('cropperContainer');
-        const cropButton = document.getElementById('cropButton');
-        const resultElement = document.getElementById('result');
-        const errorElement = document.getElementById('error');
-        const loadingElement = document.getElementById('loading');
-        const croppedImageElement = document.getElementById('croppedImage');
-        const apiKey = 'K85364678288957'; // Sustituir con tu clave API
 
-        let cropper; // Variable para la instancia de Cropper.js
+        let cropper; // Instancia de Cropper.js
 
-        // Cuando se haga clic en el botón "Etiqueta", se abrirá el selector de archivos
+        // Acción de presionar el botón "Etiqueta"
         uploadButton.addEventListener('click', () => {
-            imageInput.click(); // Abrir el selector de archivo
+            imageInput.click(); // Abrir el selector de archivos
         });
 
-        // Cuando se seleccione una imagen, se mostrará una vista previa y se habilitará el recorte
+        // Cuando el usuario selecciona una imagen
         imageInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
             if (file) {
                 const reader = new FileReader();
 
-                // Mostrar la vista previa de la imagen
                 reader.onload = (e) => {
+                    // Mostrar la imagen en la vista previa
                     imagePreview.src = e.target.result;
-                    cropperContainer.style.display = 'block'; // Mostrar el contenedor de recorte
-                    cropButton.style.display = 'block'; // Mostrar el botón de recorte
 
-                    // Inicializar Cropper.js
+                    // Mostrar el área de recorte
+                    cropContainer.style.display = 'block';
+
+                    // Inicializar Cropper.js para el recorte
                     if (cropper) {
-                        cropper.destroy(); // Si ya existe, destruir la instancia anterior
+                        cropper.destroy(); // Destruir el cropper anterior, si existe
                     }
                     cropper = new Cropper(imagePreview, {
-                        aspectRatio: 16 / 9, // Establecer la relación de aspecto si es necesario
-                        viewMode: 1,
-                        autoCropArea: 0.65,
+                        aspectRatio: NaN, // Libre relación de aspecto (escala tanto en X como en Y)
+                        viewMode: 1, // Vista del área recortada
+                        autoCropArea: 0.65, // 65% del área será seleccionada por defecto
                         responsive: true,
+                        scalable: true,
                     });
                 };
 
-                reader.readAsDataURL(file);
+                reader.readAsDataURL(file); // Leer la imagen seleccionada
             }
         });
 
-        // Función para procesar la imagen recortada y hacer OCR usando OCR.space API
-        function processImage() {
-            // Obtener la imagen recortada en base64
-            const canvas = cropper.getCroppedCanvas();
-
+        // Función para recortar y mostrar la nueva imagen
+        function generateCroppedImage() {
+            const canvas = cropper.getCroppedCanvas(); // Obtener la imagen recortada en canvas
             if (canvas) {
-                // Mostrar solo la imagen recortada
-                croppedImageElement.src = canvas.toDataURL();
-                croppedImageElement.style.display = 'block'; // Mostrar la imagen recortada
+                // Convertir el canvas a una imagen
+                const croppedImage = canvas.toDataURL(); // Obtener la imagen recortada como URL de datos
 
-                // Convertir la imagen recortada a un Blob
-                canvas.toBlob((blob) => {
-                    // Mostrar mensaje de "Analizando foto"
-                    loadingElement.style.display = 'block';
-                    resultElement.textContent = ''; // Limpiar el resultado anterior
-                    errorElement.textContent = '';  // Limpiar el error anterior
+                // Mostrar la imagen recortada en la página
+                imagePreview.src = croppedImage;
 
-                    const formData = new FormData();
-                    formData.append("file", blob);
-                    formData.append("apikey", apiKey);
-                    formData.append("language", "eng"); // Idioma de la imagen (inglés en este caso)
-
-                    // Llamar a la API de OCR.space
-                    fetch("https://api.ocr.space/parse/image", {
-                        method: "POST",
-                        body: formData,
-                    })
-                    .then((response) => response.json())
-                    .then((data) => {
-                        console.log(data); // Mostrar la respuesta completa de la API en la consola para depuración
-
-                        // Ocultar mensaje de "Analizando foto"
-                        loadingElement.style.display = 'none';
-
-                        if (data.ParsedResults && data.ParsedResults.length > 0) {
-                            const text = data.ParsedResults[0].ParsedText;
-                            const numbers = text.replace(/\D/g, ''); // Filtrar solo los números
-                            if (numbers) {
-                                resultElement.textContent = `Números detectados: ${numbers}`;
-                            } else {
-                                resultElement.textContent = 'No se detectaron números.';
-                            }
-                        } else {
-                            errorElement.textContent = 'No se pudo procesar la imagen.';
-                        }
-                    })
-                    .catch((error) => {
-                        // Ocultar mensaje de "Analizando foto"
-                        loadingElement.style.display = 'none';
-
-                        console.error(error);
-                        errorElement.textContent = 'Hubo un error al procesar la imagen.';
-                    });
-                });
+                // Ocultar el área de recorte
+                cropContainer.style.display = 'none';
             }
         }
 
-        // Botón para procesar la imagen recortada
-        cropButton.addEventListener('click', processImage);
+        // Llamar a la función para recortar cuando el usuario haya hecho su selección
+        cropperContainer.addEventListener('click', generateCroppedImage);
     </script>
 </body>
 </html>
