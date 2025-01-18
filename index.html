@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplicación de Recorte de Imagen</title>
+    <title>Aplicación de Carga de Imagen</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #20D7F0;
+            background-color: #20F06C;
         }
 
         /* Botón para cargar la imagen */
@@ -30,69 +30,39 @@
             background-color: #45a049;
         }
 
-        /* Estilos de la imagen cargada y del área de recorte */
+        /* Contenedor para mostrar la imagen */
         #imageContainer {
             margin-top: 20px;
         }
 
-        #imageInput {
-            display: none;
-        }
-
         #imagePreview {
-            max-width: 100%;
-            max-height: 400px;
-            margin: 20px auto;
-            display: block;
-        }
-
-        /* Estilo del botón de recorte */
-        #cropButton {
-            width: 200px;
-            height: 50px;
-            font-size: 20px;
-            background-color: #FF6347;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+            max-width: 50%; /* Reducir tamaño de la imagen al 50% */
+            height: auto;
             margin-top: 20px;
-        }
-
-        #cropButton:hover {
-            background-color: #FF4500;
         }
     </style>
 </head>
 <body>
 
-    <h1>Aplicación de Recorte de Imagen</h1>
+    <h1>Aplicación de Carga de Imagen</h1>
 
     <!-- Botón para cargar una foto -->
     <button id="uploadButton">Cargar Imagen</button>
 
     <!-- Input de archivo (oculto) -->
-    <input type="file" id="imageInput" accept="image/*">
+    <input type="file" id="imageInput" accept="image/*" style="display:none;">
 
-    <!-- Contenedor para mostrar la imagen y el área de recorte -->
-    <div id="imageContainer" style="display:none;">
-        <img id="imagePreview" src="" alt="Vista previa de la imagen">
+    <!-- Contenedor para mostrar la imagen -->
+    <div id="imageContainer">
+        <img id="imagePreview" src="" alt="Vista previa de la imagen" style="display:none;">
     </div>
 
-    <!-- Botón para recortar la imagen -->
-    <button id="cropButton" style="display:none;">Crear Imagen Recortada</button>
-
-    <!-- Script para el recorte -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+    <!-- Script para cargar y mostrar la imagen -->
     <script>
         // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
-        const imageContainer = document.getElementById('imageContainer');
         const imagePreview = document.getElementById('imagePreview');
-        const cropButton = document.getElementById('cropButton');
-
-        let cropper; // Instancia de Cropper.js
 
         // Abrir el selector de archivos cuando el usuario haga clic en "Cargar Imagen"
         uploadButton.addEventListener('click', () => {
@@ -108,47 +78,12 @@
                 reader.onload = (e) => {
                     // Mostrar la imagen seleccionada en la vista previa
                     imagePreview.src = e.target.result;
-
-                    // Mostrar el área de recorte
-                    imageContainer.style.display = 'block';
-                    cropButton.style.display = 'block'; // Mostrar el botón de recorte
-
-                    // Inicializar Cropper.js para el recorte
-                    if (cropper) {
-                        cropper.destroy(); // Destruir la instancia anterior de cropper si existe
-                    }
-                    cropper = new Cropper(imagePreview, {
-                        aspectRatio: NaN, // Relación de aspecto libre (escalable en ambos ejes)
-                        viewMode: 1, // Vista del área recortada
-                        autoCropArea: 0.65, // Área recortada por defecto
-                        responsive: true,
-                        scalable: true,
-                    });
+                    imagePreview.style.display = 'block'; // Hacer visible la imagen
                 };
 
                 reader.readAsDataURL(file); // Leer la imagen seleccionada
             }
         });
-
-        // Función para crear la nueva imagen recortada
-        function createCroppedImage() {
-            const canvas = cropper.getCroppedCanvas(); // Obtener el área recortada en canvas
-
-            if (canvas) {
-                // Convertir el canvas a una imagen
-                const croppedImage = canvas.toDataURL(); // Crear una URL de la imagen recortada
-
-                // Mostrar la nueva imagen recortada
-                imagePreview.src = croppedImage;
-
-                // Eliminar la imagen original
-                imageContainer.style.display = 'none';
-                cropButton.style.display = 'none';
-            }
-        }
-
-        // Cuando el usuario presiona el botón "Crear Imagen Recortada"
-        cropButton.addEventListener('click', createCroppedImage);
     </script>
 
 </body>
