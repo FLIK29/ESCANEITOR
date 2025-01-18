@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detector de Números en Vivo</title>
     <style>
-        /* Hacer que el video ocupe todo el ancho de la pantalla */
+        /* Aseguramos que el video ocupe toda la pantalla */
         #video {
             width: 100%;
             height: auto;
@@ -23,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>Detector de Números en Tiempo Real CHINGON </h1>
+    <h1>Detector de Números en Tiempo Real</h1>
     <video id="video" autoplay></video>
     <div id="result">Detectando números...</div>
     <div id="error"></div>
@@ -34,58 +34,60 @@
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
 
-        // Función para acceder a la cámara y comenzar a mostrar el video
+        // Función para iniciar el acceso a la cámara
         function startScanning() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-                // Solicitar acceso a la cámara trasera
-                navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+                navigator.mediaDevices.getUserMedia({ video: true })  // Solicitar acceso a la cámara
                     .then((stream) => {
+                        // Asignar el stream de la cámara al elemento de video
                         videoElement.srcObject = stream;
                         videoElement.play();
-                        processFrame(); // Comienza a procesar los cuadros
+                        processFrame();  // Comienza a procesar los cuadros de video
                     })
                     .catch((err) => {
+                        // En caso de error, mostrar mensaje
                         errorElement.textContent = 'No se pudo acceder a la cámara. Error: ' + err;
                     });
             } else {
+                // Si el navegador no soporta getUserMedia
                 errorElement.textContent = 'La API getUserMedia no está soportada en este navegador.';
             }
         }
 
-        // Función para procesar un fotograma y aplicar OCR
+        // Función para procesar cada cuadro del video y aplicar OCR
         function processFrame() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Ajustar tamaño del canvas a la mitad de la resolución del video para mejorar el rendimiento
+            // Ajustar el tamaño del canvas a la mitad de la resolución del video
             canvas.width = videoElement.videoWidth / 2;
             canvas.height = videoElement.videoHeight / 2;
 
             // Dibujar el fotograma actual del video en el canvas
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-            // Usar Tesseract.js para reconocer los números
+            // Usar Tesseract.js para extraer texto de la imagen
             Tesseract.recognize(
-                canvas, // Imagen del canvas
-                'eng',   // Idioma inglés (puedes agregar otros idiomas si lo necesitas)
+                canvas, // El canvas con la imagen
+                'eng',   // Idioma (puedes agregar otros idiomas si lo necesitas)
                 {
-                    logger: (m) => console.log(m), // Mostrar progreso
+                    logger: (m) => console.log(m), // Progreso de OCR
                 }
             ).then(({ data: { text } }) => {
-                // Extraer solo los números de la cadena de texto
-                const numbers = text.replace(/\D/g, ''); // Eliminar todo lo que no sean números
+                // Filtrar solo los números
+                const numbers = text.replace(/\D/g, ''); // Eliminar todo lo que no sea número
                 resultElement.textContent = `Números detectados: ${numbers}`;
             }).catch((error) => {
-                errorElement.textContent = 'Error al procesar la imagen.';
+                errorElement.textContent = 'Hubo un error al procesar la imagen.';
             });
 
-            // Continuar procesando fotogramas cada 200ms
+            // Llamar a la función de nuevo para procesar el siguiente fotograma
             setTimeout(() => {
                 requestAnimationFrame(processFrame);
-            }, 200); // Procesar 5 veces por segundo
+            }, 200);  // Frecuencia de captura de fotogramas: 5 veces por segundo
         }
 
-        // Iniciar el escaneo cuando la página se carga
+        // Iniciar la captura al cargar la página
         window.onload = startScanning;
     </script>
 </body>
