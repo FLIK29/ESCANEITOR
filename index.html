@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Detector de Números en Vivo 2  </title>
+    <title>Detector de Números en Vivo</title>
     <style>
-        /* Asegúrate de que el video ocupe toda la pantalla o el tamaño correcto */
+        /* Hacer que el video ocupe todo el ancho de la pantalla */
         #video {
             width: 100%;
             height: auto;
             border: 1px solid black;
-            margin-bottom: 10px;
         }
         #result {
             font-size: 20px;
@@ -24,7 +23,7 @@
     </style>
 </head>
 <body>
-    <h1>Detector de Números en Tiempo Real V2 </h1>
+    <h1>Detector de Números en Tiempo Real CHINGON </h1>
     <video id="video" autoplay></video>
     <div id="result">Detectando números...</div>
     <div id="error"></div>
@@ -35,63 +34,58 @@
         const resultElement = document.getElementById('result');
         const errorElement = document.getElementById('error');
 
-        // Función para iniciar la cámara y mostrar el video en tiempo real
+        // Función para acceder a la cámara y comenzar a mostrar el video
         function startScanning() {
             if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // Solicitar acceso a la cámara trasera
                 navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
                     .then((stream) => {
-                        // Asignar el stream de la cámara al video
                         videoElement.srcObject = stream;
                         videoElement.play();
-                        // Iniciar el proceso de captura de imágenes y OCR
-                        processFrame();
+                        processFrame(); // Comienza a procesar los cuadros
                     })
                     .catch((err) => {
-                        // Mostrar un error si no se puede acceder a la cámara
-                        errorElement.textContent = 'No se pudo acceder a la cámara. Verifica los permisos. Errores: ' + err;
+                        errorElement.textContent = 'No se pudo acceder a la cámara. Error: ' + err;
                     });
             } else {
-                // Si el navegador no soporta getUserMedia
-                errorElement.textContent = 'La API getUserMedia no es soportada en este navegador.';
+                errorElement.textContent = 'La API getUserMedia no está soportada en este navegador.';
             }
         }
 
-        // Función para capturar una imagen del video y procesarla con OCR
+        // Función para procesar un fotograma y aplicar OCR
         function processFrame() {
-            // Crear un canvas para capturar el fotograma del video
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Ajustar el tamaño del canvas al tamaño del video (o mitad para mejorar rendimiento)
+            // Ajustar tamaño del canvas a la mitad de la resolución del video para mejorar el rendimiento
             canvas.width = videoElement.videoWidth / 2;
             canvas.height = videoElement.videoHeight / 2;
 
-            // Dibujar el fotograma del video en el canvas
+            // Dibujar el fotograma actual del video en el canvas
             ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
 
-            // Usar Tesseract.js para hacer OCR sobre la imagen capturada
+            // Usar Tesseract.js para reconocer los números
             Tesseract.recognize(
-                canvas, // Imagen que se extrae del canvas
-                'eng',   // Idioma (puedes agregar otros idiomas si es necesario)
+                canvas, // Imagen del canvas
+                'eng',   // Idioma inglés (puedes agregar otros idiomas si lo necesitas)
                 {
-                    logger: (m) => console.log(m), // Información de progreso
+                    logger: (m) => console.log(m), // Mostrar progreso
                 }
             ).then(({ data: { text } }) => {
-                // Filtrar solo los números (del 1 al 9)
-                const numbers = text.replace(/\D/g, ''); // Eliminar todo lo que no sea número
+                // Extraer solo los números de la cadena de texto
+                const numbers = text.replace(/\D/g, ''); // Eliminar todo lo que no sean números
                 resultElement.textContent = `Números detectados: ${numbers}`;
             }).catch((error) => {
-                console.error(error);
-                errorElement.textContent = 'Hubo un error al procesar la imagen.';
+                errorElement.textContent = 'Error al procesar la imagen.';
             });
 
-            // Llamar a la función de nuevo después de un breve retraso
+            // Continuar procesando fotogramas cada 200ms
             setTimeout(() => {
                 requestAnimationFrame(processFrame);
-            }, 200); // Frecuencia de captura: 5 veces por segundo
+            }, 200); // Procesar 5 veces por segundo
         }
 
-        // Iniciar el proceso de escaneo al cargar la página
+        // Iniciar el escaneo cuando la página se carga
         window.onload = startScanning;
     </script>
 </body>
