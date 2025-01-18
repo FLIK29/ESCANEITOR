@@ -10,7 +10,7 @@
             text-align: center;
             margin: 0;
             padding: 0;
-            background-color: #green;
+            background-color: #f4f4f4;
         }
 
         /* Botón para cargar la imagen */
@@ -46,14 +46,6 @@
             display: block;
         }
 
-        #cropContainer {
-            display: none;
-            margin: 20px auto;
-            max-width: 80%;
-            max-height: 400px;
-            border: 1px solid #ddd;
-        }
-
         /* Estilo del botón de recorte */
         #cropButton {
             width: 200px;
@@ -83,7 +75,7 @@
     <input type="file" id="imageInput" accept="image/*">
 
     <!-- Contenedor para mostrar la imagen y el área de recorte -->
-    <div id="cropContainer">
+    <div id="imageContainer" style="display:none;">
         <img id="imagePreview" src="" alt="Vista previa de la imagen">
     </div>
 
@@ -96,7 +88,7 @@
         // Selección de elementos
         const uploadButton = document.getElementById('uploadButton');
         const imageInput = document.getElementById('imageInput');
-        const cropContainer = document.getElementById('cropContainer');
+        const imageContainer = document.getElementById('imageContainer');
         const imagePreview = document.getElementById('imagePreview');
         const cropButton = document.getElementById('cropButton');
 
@@ -118,7 +110,7 @@
                     imagePreview.src = e.target.result;
 
                     // Mostrar el área de recorte
-                    cropContainer.style.display = 'block';
+                    imageContainer.style.display = 'block';
                     cropButton.style.display = 'block'; // Mostrar el botón de recorte
 
                     // Inicializar Cropper.js para el recorte
@@ -150,7 +142,7 @@
                 imagePreview.src = croppedImage;
 
                 // Eliminar la imagen original
-                cropContainer.style.display = 'none';
+                imageContainer.style.display = 'none';
                 cropButton.style.display = 'none';
             }
         }
